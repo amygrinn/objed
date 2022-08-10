@@ -863,7 +863,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map "*" 'objed-mark-more)
     (define-key map "l" 'objed-last)
     ;; zap to object, jump to objects with avy
-    (define-key map "g" 'objed-ace)
+    (define-key map "g" 'objed-quit)
     (define-key map "G" 'objed-occur)
     (define-key map (kbd "M-g o") 'objed-occur)
 
