@@ -905,6 +905,11 @@ BEFORE and AFTER are forms to execute before/after calling the command."
     (define-key map (kbd "<C-S-left>") 'objed-forward-barf-sexp)
     (define-key map (kbd "<C-S-right>") 'objed-forward-slurp-sexp)
 
+    (define-key map (kbd "<C-M-down>") 'objed-backward-barf-sexp)
+    (define-key map (kbd "<C-M-up>") 'objed-backward-slurp-sexp)
+    (define-key map (kbd "<C-S-down>") 'objed-backward-barf-sexp)
+    (define-key map (kbd "<C-S-up>") 'objed-backward-slurp-sexp)
+
     (define-key map (kbd " <S-left>") 'objed-move-object-backward)
     (define-key map (kbd " <S-right>") 'objed-move-object-forward)
     ;; for some objects up down is more intuitive
@@ -3657,43 +3662,256 @@ If nil `eval-region' is used instead.")
                         :end (save-excursion (insert istring)
                                              (point))))))
 
-(defun objed-forward-slurp-sexp ()
-  "Slurp following sexp into current object."
-  (interactive)
-  (unless (memq last-command
-                '(objed-forward-slurp-sexp
-                  objed-forward-barf-sexp))
-    (objed--maybe-switch-to-sexp-fallback))
-  (objed--markify-current-object)
-  (let ((iend (objed--iend))
-        (oend (objed--oend)))
-    (goto-char oend)
-    (let ((sexp (delete-and-extract-region
-                 (point)
-                 (scan-sexps (point) 1))))
-      (goto-char iend)
-      (insert sexp)
-      (set-marker iend (point))
-      (goto-char oend))))
+(defmacro objed-with-temp-object (object &rest body)
+  "Switch to objed OBJECT temporarily and evaluate BODY."
+  (declare (indent 1))
+  `(let ((cur-object objed--object)
+         (cur-object-bounds objed--current-obj))
+     (prog1
+         (save-excursion
+           (setq objed--object ,object)
+           (setq objed--current-obj (objed--get))
+           ,@body)
+       (setq objed--object cur-object)
+       (setq objed--current-obj cur-object-bounds))))
 
-(defun objed-forward-barf-sexp ()
-  "Barf last sexp out of current object."
-  (interactive)
-  (unless (memq last-command
-                '(objed-forward-slurp-sexp
-                  objed-forward-barf-sexp))
-    (objed--maybe-switch-to-sexp-fallback))
-  (objed--markify-current-object)
-  (let ((iend (objed--iend))
-        (oend (objed--oend)))
-    (goto-char iend)
-    (let ((sexp (delete-and-extract-region
-                 (point)
-                 (scan-sexps (point) -1))))
-      (goto-char oend)
-      (save-excursion
-        (insert sexp)))))
+(defun objed-forward-slurp-sexp (&optional arg)
+  "Slurp following sexp into current bracket or string object.
 
+Automatically reindent the newly slurped sexp, unless it is a
+string.
+
+With numerical prefix argument, slurp that many sexps into
+current object.
+
+With \\[universal-argument], slurp all proceeding sexps into the
+current object."
+  (interactive "P")
+  (save-excursion
+    (cond
+     ((objed--in-comment-p)
+      (error "Invalid context for forward slurping sexps."))
+     ((numberp arg)
+      (if (< arg 0)
+          (objed-forward-barf-sexp (- arg))
+        (while (< 0 arg)
+          (objed-forward-slurp-sexp)
+          (setq arg (1- arg)))))
+     ((objed--in-string-p)
+      ;; If there is anything to slurp into the string, take that.
+      ;; Otherwise, try to slurp into enclosing list.
+      (if (objed-with-temp-object 'string
+            (scan-sexps (objed--oend) 1))
+          (objed-with-temp-object 'string
+            (objed--forward-slurp-object arg))
+        (objed-with-temp-object 'bracket
+          (objed--forward-slurp-object arg)))) 
+     (t
+      (objed-with-temp-object 'bracket
+        (objed--forward-slurp-object arg))))))
+
+(defun objed--forward-slurp-object (&optional arg)
+  (let ((start (objed--obeg))
+        (end (objed--oend)))
+    (goto-char end)
+    ;; Signal any errors that we might get first, before mucking with
+    ;; the buffer's contents.
+    (save-excursion (forward-sexp))
+    (let ((close (char-before)))
+      ;; Skip intervening whitespace if we're slurping into an empty
+      ;; string.
+      (if (and (= (+ start 2) end)
+               (eq (save-excursion (objed--skip-ws) (point))
+                   (save-excursion (forward-sexp) (backward-sexp) (point))))
+          (delete-region (- (point) 1)
+                         (save-excursion (objed--skip-ws) (point)))
+        (delete-char -1))
+      (ignore-error 'scan-error
+        (forward-sexp)
+        (if arg
+            (while t (forward-sexp))))
+      (insert close)
+      (unless (eq 'string objed--object)
+        (indent-region start (point))))))
+
+(defun objed-forward-barf-sexp (&optional arg)
+  "Remove the last sexp in the current list or string object.
+
+Automatically reindent the newly barfed sexp, unless it is a
+string.
+
+With a numerical prefix argument, barf that many sexps out of
+current object.
+
+With \\[universal-argument], barf all sexps out of current
+object."
+  (interactive "P")
+  (save-excursion
+    (cond
+     ((objed--in-comment-p)
+      (error "Invalid context for forward barfing sexps."))
+     ((and (numberp arg) (< arg 0))
+      (objed-forward-slurp-sexp (- arg)))
+     ((objed--in-string-p)
+      ;; If there is anything in the string, take that.
+      ;; Otherwise, try to barf string out of enclosing list.
+      (if (save-excursion
+            (objed-with-temp-object 'string
+              (let ((start (objed--ibeg))
+                    (end (objed--iend)))
+                (goto-char end)
+                (backward-sexp (and (numberp arg) arg))
+                (>= (point) start))))
+          (objed-with-temp-object 'string
+            (objed--forward-barf-object arg))
+        (objed-with-temp-object 'bracket
+          (objed--forward-barf-object arg))))
+     (t
+      (objed-with-temp-object 'bracket
+        (objed--forward-barf-object arg))))))
+
+(defun objed--forward-barf-object (&optional arg)
+  (let ((end (objed--iend))
+        (start (objed--ibeg)))
+    (goto-char end)
+    ;; Signal any errors that we might get first, before mucking
+    ;; with the buffer's contents.
+    (save-excursion
+      (backward-sexp (and (numberp arg) arg))
+      (unless (>= (point) start)
+        (error "Not enough content for forward barfing out of string.")))
+    (let ((close (char-after)))
+      (delete-char 1)
+      (if (or (not arg) (numberp arg))
+          (backward-sexp arg)
+        (while (>= (point) start)
+          (backward-sexp)))
+      (objed--skip-ws t)
+      (insert close))
+    (if (eq (point)
+            (save-excursion (forward-sexp) (backward-sexp) (point)))
+        (insert ?\s))
+    (unless (eq 'string objed--object)
+      (indent-region (point) end))))
+
+(defun objed-backward-slurp-sexp (&optional arg)
+  "Add in the preceding sexp to the current bracket or string.
+
+If it is a list, automatically reindent.
+
+With numerical prefix argument, slurp that many sexps into the
+current object.
+
+With \\[universal-argument], slurp all preceding sexps into
+current object."
+  (interactive "P")
+  (save-excursion
+    (cond ((objed--in-comment-p)
+           (error "Invalid context for slurping sexps."))
+          ((numberp arg)
+           (if (< arg 0)
+               (objed-backward-barf-sesxp (- arg))
+             (while (< 0 arg)
+               (objed-backward-slurp-sexp)
+               (setq arg (1- arg)))))
+          ((objed--in-string-p)
+           ;; If there is anything to slurp into the string, take that.
+           ;; Otherwise, try to slurp into the enclosing list.
+           (if (objed-with-temp-object 'string
+                 (scan-sexps (objed--obeg) -1))
+               (objed-with-temp-object 'string
+                 (objed--backward-slurp-object arg))
+             (objed-with-temp-object 'bracket
+               (objed--backward-slurp-object arg))))
+          (t
+           (objed-with-temp-object 'bracket
+             (objed--backward-slurp-object arg))))))
+
+(defun objed--backward-slurp-object (&optional arg)
+  (let ((start (objed--obeg))
+        (end (objed--oend)))
+    (goto-char start)
+    ;; Signal any errors that we might get first, before mucking with
+    ;; the buffer's contents.
+    (save-excursion (backward-sexp))
+    (let ((open (char-after))
+          (target (point)))
+      ;; Skip intervening whitespace if we're slurping into an empty
+      ;; string.
+      (if (and (= (+ start 2) end)
+               (eq (save-excursion (objed--skip-ws t) (point))
+                   (save-excursion (backward-sexp) (forward-sexp) (point))))
+          (delete-region (save-excursion (objed--skip-ws t) (point))
+                         (+ (point) 1))
+        (delete-char 1))
+      (ignore-error 'scan-error
+        (backward-sexp)
+        (if arg
+            (while t (forward-sexp))))
+      (insert open)
+      (unless (eq 'string objed--object)
+        (indent-region (point) end)))))
+
+
+(defun objed-backward-barf-sexp (&optional arg)
+  "Remove the first sexp in the current list or string object.
+
+Automatically reindent the newly barfed sexp, unless it is a
+string.
+
+With a numerical prefix argument, barf that many sexps out of
+current object.
+
+With \\[universal-argument], barf all sexps out of current
+object."
+  (interactive "P")
+  (save-excursion
+    (cond
+     ((objed--in-comment-p)
+      (error "Invalid context for backward barfing sexps."))
+     ((and (numberp arg) (< arg 0))
+      (objed-backward-slurp-sexp (- arg)))
+     ((objed--in-string-p)
+      ;; If there is anything in the string, take that.
+      ;; Otherwise, try to barf string out of enclosing list.
+      (if (save-excursion
+            (objed-with-temp-object 'string
+              (let ((start (objed--ibeg))
+                    (end (objed--iend)))
+                (goto-char start)
+                (forward-sexp (and (numberp arg) arg))
+                (<= (point) end))))
+          (objed-with-temp-object 'string
+            (objed--backward-barf-object arg))
+        (objed-with-temp-object 'bracket
+          (objed--backward-barf-object arg))))
+     (t
+      (objed-with-temp-object 'bracket
+        (objed--backward-barf-object arg))))))
+
+(defun objed--backward-barf-object (&optional arg)
+  (let ((end (objed--iend))
+        (start (objed--ibeg)))
+    (goto-char start)
+    ;; Signal any errors that we might get first, before mucking
+    ;; with the buffer's contents.
+    (save-excursion
+      (forward-sexp (and (numberp arg) arg))
+      (unless (<= (point) end)
+        (error "Not enough content for backward barfing out of string.")))
+    (let ((open (char-before)))
+      (delete-char -1)
+      (if (or (not arg) (numberp arg))
+          (forward-sexp arg)
+        (while (<= (point) end)
+          (forward-sexp)))
+      (objed--skip-ws)
+      (if (eq (point)
+              (save-excursion (backward-sexp) (forward-sexp) (point)))
+          (insert ?\s))
+      (insert open)) 
+    (unless (eq 'string objed--object)
+      (indent-region start (point)))))
 
 (defun objed-execute ()
   "Execute object contents as shell commands."
@@ -3708,7 +3926,6 @@ If nil `eval-region' is used instead.")
                               "?"))
         (shell-command line)))
     (objed--init objed--object)))
-
 
 ;; * Exit active state
 
