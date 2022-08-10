@@ -689,6 +689,7 @@ BEFORE and AFTER are forms to execute before/after calling the command."
       (define-key map (kbd (format "M-%c" n)) 'digit-argument)
       (define-key map (kbd (format "C-%c" n)) 'digit-argument))
     ;; common emacs keys
+    (define-key map (kbd "C-g") 'objed-toggle)
     (define-key map (kbd "?") 'objed-show-top-level)
 
     (define-key map "q" 'objed-quit-window-or-reformat)
@@ -1289,6 +1290,9 @@ Useful for keeping the same popup when pressing undefined keys.")
 (defvar-local objed-disabled-p nil
   "If non-nil objed will not activate.")
 
+(defvar-local objed-active-p nil
+  "Whether objed is activated or not.")
+
 (defun objed--activate (cmd &rest _)
   "Activate `objed' with command CMD.
 
@@ -1470,7 +1474,7 @@ that any previous instance of this object is used."
           (set-transient-map objed-map
                              #'objed--keep-transient-p
                              #'objed--reset))
-
+    (setq objed-active-p t)
     (run-hooks 'objed-init-hook)))
 
 (defun objed-init-mode-line ()
@@ -4088,6 +4092,7 @@ Reset and reinitilize objed if appropriate."
               (set (car setting) (cdr setting))
             (kill-local-variable setting))))
       (remove-hook 'pre-command-hook 'objed--push-state t)
+      (setq objed-active-p nil)
       (run-hooks 'objed-exit-hook))))
 
 (defun objed--reset ()
@@ -4198,6 +4203,14 @@ whitespace they build a sequence."
 
 ;; * Objed Mode
 
+(defun objed-toggle ()
+  "Toggle activation of objed."
+  (interactive)
+  (if objed-active-p
+      (objed-quit)
+    (if objed-mode
+        (objed-activate))))
+
 (defvar objed-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-i") 'objed-activate)
@@ -4244,9 +4257,11 @@ To define your own text objects and editing operations see
                        display-buffer
                        pop-to-buffer))
             ;; auto entry cmds
-            (advice-add f :after #'objed--init-later))))
+            (advice-add f :after #'objed--init-later)))
+        (advice-add 'keyboard-quit :before #'objed-toggle))
     (remove-hook 'minibuffer-setup-hook 'objed--reset)
     (objed--remove-advices objed-cmd-alist)
+    (advice-remove 'keyboard-quit #'objed-toggle)
     (dolist (f '(quit-window
                  create-file-buffer
                  rename-buffer
