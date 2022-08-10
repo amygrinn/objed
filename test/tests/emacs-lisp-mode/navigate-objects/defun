@@ -1,4 +1,4 @@
-cd[]]
+od[]]
 ;;;;
 
 (defun objed--save-start-position (&rest _)

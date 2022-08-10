@@ -35,7 +35,7 @@
     (setq last-command cmd)))
 
 (defun objed-decode-keysequence (str)
-  "Decode STR from e.g. \"23ab5c\" to '(23 \"a\" \"b\" 5 \"c\")"
+  "Decode STR from e.g. \"23ab5c\" to (23 \"a\" \"b\" 5 \"c\")"
   (let ((table (copy-sequence (syntax-table))))
     (cl-loop for i from ?0 to ?9 do
              (modify-syntax-entry i "." table))
@@ -189,7 +189,8 @@ Insert KEY if there's no command."
                 (expand-file-name
                  (format "tests/%s/%s" (symbol-name mode) dir)
                  (file-name-directory
-                  (or load-file-name default-directory))) t "^[^.]"))
+                  (or load-file-name default-directory)))
+                t "^[^.]"))
         (body nil))
     (push 'ert-deftest body)
     (push (intern (format "objed-%s" dir)) body)
@@ -208,7 +209,8 @@ Insert KEY if there's no command."
                (expand-file-name
                 (format "tests/%s" (symbol-name mode))
                 (file-name-directory
-                 (or load-file-name default-directory))) t "^[^.]"))
+                 (or load-file-name default-directory)))
+               t "^[^.]"))
         (body nil))
     (push 'progn body)
     (dolist (dir dirs)

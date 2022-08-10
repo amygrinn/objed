@@ -137,7 +137,7 @@
   :prefix "objed-")
 
 (defgroup objed-faces nil
-  "Faces for `objed'"
+  "Faces for `objed'."
   :group 'objed
   :group 'faces)
 
@@ -1620,7 +1620,7 @@ matches IREGEX is not displayed."
 ;; * Basic Movement, Block Objects (textblocks)
 
 (defvar objed--block-objects '(buffer paragraph block indent textblock)
-  "List of objects which are 'line based'.
+  "List of objects which are `line based'.
 
 Objects which are built by lines of text.")
 
@@ -1692,7 +1692,7 @@ order. ISTATE is the object state to use and defaults to whole."
 
 Activates (line based) object at point (and move to its start).
 On repeat proceed to beginning of the indentation block,
-paragraph and other 'line based' objects.
+paragraph and other `line based' objects.
 
 See also `objed--block-objects'."
   (interactive)
@@ -1734,7 +1734,7 @@ See also `objed--block-objects'."
 
 Moves to beginning of line/indentation and activates the text
 moved over. On repeat proceed to beginning of the indentation
-block, paragraph and other 'line based' objects.
+block, paragraph and other `line based' objects.
 
 See also `objed--block-objects'."
     (interactive)
@@ -1787,7 +1787,7 @@ See also `objed--block-objects'."
 
 Moves to end of line and activates the text moved over. On repeat
 proceed to end of the indentation block, paragraph and other
-'line based' objects.
+`line based' objects.
 
 See also `objed--block-objects'."
     (interactive)
@@ -3685,7 +3685,7 @@ If nil `eval-region' is used instead.")
 Automatically reindent the newly slurped sexp, unless it is a
 string.
 
-With numerical prefix argument, slurp that many sexps into
+With numerical prefix ARG, slurp that many sexps into
 current object.
 
 With \\[universal-argument], slurp all proceeding sexps into the
@@ -3694,7 +3694,7 @@ current object."
   (save-excursion
     (cond
      ((objed--in-comment-p)
-      (error "Invalid context for forward slurping sexps."))
+      (error "Invalid context for forward slurping sexps"))
      ((numberp arg)
       (if (< arg 0)
           (objed-forward-barf-sexp (- arg))
@@ -3709,12 +3709,15 @@ current object."
           (objed-with-temp-object 'string
             (objed--forward-slurp-object arg))
         (objed-with-temp-object 'bracket
-          (objed--forward-slurp-object arg)))) 
+          (objed--forward-slurp-object arg))))
      (t
       (objed-with-temp-object 'bracket
         (objed--forward-slurp-object arg))))))
 
 (defun objed--forward-slurp-object (&optional arg)
+  "Slurp the next sexp into the currently selected object.
+
+With ARG, slurp all proceeding sexps into object."
   (let ((start (objed--obeg))
         (end (objed--oend)))
     (goto-char end)
@@ -3744,7 +3747,7 @@ current object."
 Automatically reindent the newly barfed sexp, unless it is a
 string.
 
-With a numerical prefix argument, barf that many sexps out of
+With a numerical prefix ARG, barf that many sexps out of
 current object.
 
 With \\[universal-argument], barf all sexps out of current
@@ -3753,7 +3756,7 @@ object."
   (save-excursion
     (cond
      ((objed--in-comment-p)
-      (error "Invalid context for forward barfing sexps."))
+      (error "Invalid context for forward barfing sexps"))
      ((and (numberp arg) (< arg 0))
       (objed-forward-slurp-sexp (- arg)))
      ((objed--in-string-p)
@@ -3775,6 +3778,9 @@ object."
         (objed--forward-barf-object arg))))))
 
 (defun objed--forward-barf-object (&optional arg)
+  "Barf the last sexp out of the currently selected object.
+
+With ARG, barf all sexps out of current object to the right."
   (let ((end (objed--iend))
         (start (objed--ibeg)))
     (goto-char end)
@@ -3783,7 +3789,7 @@ object."
     (save-excursion
       (backward-sexp (and (numberp arg) arg))
       (unless (>= (point) start)
-        (error "Not enough content for forward barfing out of string.")))
+        (error "Not enough content for forward barfing out of string")))
     (let ((close (char-after)))
       (delete-char 1)
       (if (or (not arg) (numberp arg))
@@ -3803,7 +3809,7 @@ object."
 
 If it is a list, automatically reindent.
 
-With numerical prefix argument, slurp that many sexps into the
+With numerical prefix ARG, slurp that many sexps into the
 current object.
 
 With \\[universal-argument], slurp all preceding sexps into
@@ -3811,10 +3817,10 @@ current object."
   (interactive "P")
   (save-excursion
     (cond ((objed--in-comment-p)
-           (error "Invalid context for slurping sexps."))
+           (error "Invalid context for slurping sexps"))
           ((numberp arg)
            (if (< arg 0)
-               (objed-backward-barf-sesxp (- arg))
+               (objed-backward-barf-sexp (- arg))
              (while (< 0 arg)
                (objed-backward-slurp-sexp)
                (setq arg (1- arg)))))
@@ -3832,14 +3838,16 @@ current object."
              (objed--backward-slurp-object arg))))))
 
 (defun objed--backward-slurp-object (&optional arg)
+  "Slurp the preceding sexp into the currently selected object.
+
+With ARG, slurp all preceding sexps into object."
   (let ((start (objed--obeg))
         (end (objed--oend)))
     (goto-char start)
     ;; Signal any errors that we might get first, before mucking with
     ;; the buffer's contents.
     (save-excursion (backward-sexp))
-    (let ((open (char-after))
-          (target (point)))
+    (let ((open (char-after)))
       ;; Skip intervening whitespace if we're slurping into an empty
       ;; string.
       (if (and (= (+ start 2) end)
@@ -3856,14 +3864,13 @@ current object."
       (unless (eq 'string objed--object)
         (indent-region (point) end)))))
 
-
 (defun objed-backward-barf-sexp (&optional arg)
   "Remove the first sexp in the current list or string object.
 
 Automatically reindent the newly barfed sexp, unless it is a
 string.
 
-With a numerical prefix argument, barf that many sexps out of
+With a numerical prefix ARG, barf that many sexps out of
 current object.
 
 With \\[universal-argument], barf all sexps out of current
@@ -3872,7 +3879,7 @@ object."
   (save-excursion
     (cond
      ((objed--in-comment-p)
-      (error "Invalid context for backward barfing sexps."))
+      (error "Invalid context for backward barfing sexps"))
      ((and (numberp arg) (< arg 0))
       (objed-backward-slurp-sexp (- arg)))
      ((objed--in-string-p)
@@ -3894,6 +3901,9 @@ object."
         (objed--backward-barf-object arg))))))
 
 (defun objed--backward-barf-object (&optional arg)
+  "Barf the first sexp out of the currently selected object.
+
+With ARG, barf all sexps out of current object to the left."
   (let ((end (objed--iend))
         (start (objed--ibeg)))
     (goto-char start)
@@ -3902,7 +3912,7 @@ object."
     (save-excursion
       (forward-sexp (and (numberp arg) arg))
       (unless (<= (point) end)
-        (error "Not enough content for backward barfing out of string.")))
+        (error "Not enough content for backward barfing out of string")))
     (let ((open (char-before)))
       (delete-char -1)
       (if (or (not arg) (numberp arg))
@@ -3913,7 +3923,7 @@ object."
       (if (eq (point)
               (save-excursion (backward-sexp) (forward-sexp) (point)))
           (insert ?\s))
-      (insert open)) 
+      (insert open))
     (unless (eq 'string objed--object)
       (indent-region start (point)))))
 
