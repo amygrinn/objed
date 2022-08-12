@@ -564,8 +564,7 @@ Use `objed-define-dispatch' to define a dispatch command.")
 
 (defvar objed-mode-map
   (objed-make-keymap
-   '(("M-i" . objed-activate)
-     ("M-o" . objed-activate-object)
+   '(("M-#" . objed-activate-object)
      ("M-[" . objed-beg-of-object-at-point)
      ("M-]" . objed-end-of-object-at-point)
      ("C-," . objed-prev-identifier)
