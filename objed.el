@@ -2342,7 +2342,101 @@ object."
       (objed-with-temp-object 'bracket
         (objed--backward-barf-object arg))))))
 
+;; Operations
 
+(defun objed-op-x (&optional arg)
+  "Choose and apply an operation from region commands with completion.
+
+With numeric prerfix ARG of 0 invalidate the used cache. Any
+other value of ARG gets passed as prefix argument to the choosen
+region command."
+  (interactive "P")
+  (let* ((rcmd (objed--read-cmd (= 0 (prefix-numeric-value arg))))
+         (cmd (objed--create-op
+               rcmd
+               (and (not (= 0 (prefix-numeric-value arg)))
+                    arg))))
+    (objed--do cmd rcmd)))
+
+(objed-define-op nil objed-case-op)
+
+(defun objed-eval-defun (&optional replace)
+  "Eval defun or objects.
+
+If REPLACE is non-nil replace evaluated code with result."
+  (interactive "P")
+  (if objed--marked-ovs
+      (save-excursion
+        (dolist (ov (nreverse (copy-sequence objed--marked-ovs)))
+          (let ((beg (overlay-start ov))
+                (end (overlay-end ov)))
+            (delete-overlay ov)
+            (when (and beg end)
+              (goto-char beg)
+              (funcall 'objed--eval-func beg end replace)))))
+    (let* ((odata (objed--get-object 'defun))
+           (reg (objed--current odata))
+           (res nil))
+      (when (and reg
+                 (setq res (apply 'objed--eval-func
+                                  (append reg (list replace)))))
+        (prog1 res
+          (objed--switch-to 'defun nil odata))))))
+
+(defun objed-eval-exp (&optional replace)
+  "Eval expression at point, fallback to defun.
+
+If REPLACE is non-nil replace evaluated code with result."
+  (interactive "P")
+  (let* ((obj (cond ((objed--at-object-p 'bracket)
+                       'bracket)
+                    ((or (objed--at-object-p 'identifier)
+                         (objed--inside-object-p 'identifier))
+                     'identifier)
+                    (t 'defun)))
+         (odata (objed--get-object obj))
+         (res (and odata
+                   (apply 'objed--eval-func
+                          (append (objed--current odata) (list replace))))))
+    (if replace
+        (objed--switch-to 'char)
+      (when res
+        (prog1 res
+          (objed--switch-to obj nil odata))))))
+
+(defun objed-narrow (&optional arg)
+  "Narrow to object.
+
+With prefix argument ARG call `edit-indirect-region' if
+`edit-indirect' is available."
+  (interactive "P")
+  (if objed--marked-ovs
+      (message "Narrowing not possible with multiple objects.")
+    (cond ((bound-and-true-p edit-indirect--overlay)
+           (edit-indirect-commit))
+          ((buffer-narrowed-p)
+           (widen))
+          (t
+           (if (and (require 'edit-indirect nil t)
+                    arg)
+               (switch-to-buffer
+                (apply #'edit-indirect-region (objed--current)))
+             (apply 'narrow-to-region (objed--current)))))))
+
+(defun objed-other-window ()
+  "Like `other-window' for objed."
+  (interactive)
+  (objed--reset--objed-buffer)
+  (other-window 1)
+  (objed--init (or objed--object 'char)))
+
+
+(defun objed-kill-buffer ()
+  "Like `kill-this-buffer' for objed."
+  (interactive)
+  (objed--reset--objed-buffer)
+  (kill-buffer (current-buffer))
+  (objed--init (or objed--object 'char)))
 
 ;; Dispatch commands
 
@@ -2352,38 +2446,19 @@ object."
 (objed-define-dispatch "=" objed--ace-switch-in-current)
 (objed-define-dispatch "#" objed--ace-switch-object)
 
-;; Operations
 
-
-(objed-define-op nil objed-case-op)
-
+;;;; Utility expressions
 
 (defun objed-backward-symbol (arg)
   "Wrapper around `forward-symbol'.
 Move ARG times backward."
-  (interactive "^p")
   (forward-symbol (- arg)))
 
 (defun objed-repeat ()
   "Repeat last command for objed."
-  (interactive)
   (call-interactively 'repeat)
   (setq real-this-command 'repeat)
   (objed--switch-to 'char))
-
-(defun objed-other-window ()
-  "Like `other-window' for objed."
-  (interactive)
-  (objed--reset--objed-buffer)
-  (other-window 1)
-  (objed--init (or objed--object 'char)))
-
-(defun objed-kill-buffer ()
-  "Like `kill-this-buffer' for objed."
-  (interactive)
-  (objed--reset--objed-buffer)
-  (kill-buffer (current-buffer))
-  (objed--init (or objed--object 'char)))
 
 (defun objed--forward-sexp ()
   "Forward a sexp."
@@ -2497,7 +2572,6 @@ Object is choosen based on context."
       (when (objed--switch-to obj)
         (goto-char (objed--beg))))))
 
-;;;###autoload
 (defun objed-activate (&optional obj)
   "Activate objed.
 
@@ -2513,9 +2587,6 @@ back to `objed-initial-object' if no match found."
          objed-initial-object))
     (objed-init obj)))
 
-
-
-;;;###autoload
 (defun objed-until-beg-of-object-at-point ()
   "Move to beginning of object at point and active text moved over."
   (interactive)
@@ -2526,7 +2597,6 @@ back to `objed-initial-object' if no match found."
       (goto-char (objed--ibeg))
       (objed--change-to :end pos :iend pos))))
 
-;;;###autoload
 (defun objed-until-end-of-object-at-point ()
   "Move to end of object at point and active text moved over."
   (interactive)
@@ -2620,19 +2690,6 @@ argument ARG unmark that many objects."
   (interactive)
   (objed--toggle-mark))
 
-(defun objed-op-x (&optional arg)
-  "Choose and apply an operation from region commands with completion.
-
-With numeric prerfix ARG of 0 invalidate the used cache. Any
-other value of ARG gets passed as prefix argument to the choosen
-region command."
-  (interactive "P")
-  (let* ((rcmd (objed--read-cmd (= 0 (prefix-numeric-value arg))))
-         (cmd (objed--create-op
-               rcmd
-               (and (not (= 0 (prefix-numeric-value arg)))
-                    arg))))
-    (objed--do cmd rcmd)))
 
 (defun objed-insert (&optional read)
   "Insert stuff.
@@ -2713,25 +2770,6 @@ Moves point over any whitespace afterwards."
         ((eq dir 'backward)
          (objed-move-object-backward))))
 
-(defun objed-narrow (&optional arg)
-  "Narrow to object.
-
-With prefix argument ARG call `edit-indirect-region' if
-`edit-indirect' is available."
-  (interactive "P")
-  (if objed--marked-ovs
-      (message "Narrowing not possible with multiple objects.")
-    (cond ((bound-and-true-p edit-indirect--overlay)
-           (edit-indirect-commit))
-          ((buffer-narrowed-p)
-           (widen))
-          (t
-           (if (and (require 'edit-indirect nil t)
-                    arg)
-               (switch-to-buffer
-                (apply #'edit-indirect-region (objed--current)))
-             (apply 'narrow-to-region (objed--current)))))))
-
 ;; TODO: toggle like fill/unfill
 (defun objed-reformat-op (beg end)
   "Reformat object between BEG and END."
@@ -2746,50 +2784,6 @@ With prefix argument ARG call `edit-indirect-region' if
          (objed--init objed--object))
         (t
          (objed-indent beg end))))
-
-(defun objed-eval-defun (&optional replace)
-  "Eval defun or objects.
-
-If REPLACE is non-nil replace evaluated code with result."
-  (interactive "P")
-  (if objed--marked-ovs
-      (save-excursion
-        (dolist (ov (nreverse (copy-sequence objed--marked-ovs)))
-          (let ((beg (overlay-start ov))
-                (end (overlay-end ov)))
-            (delete-overlay ov)
-            (when (and beg end)
-              (goto-char beg)
-              (funcall 'objed--eval-func beg end replace)))))
-    (let* ((odata (objed--get-object 'defun))
-           (reg (objed--current odata))
-           (res nil))
-      (when (and reg
-                 (setq res (apply 'objed--eval-func
-                                  (append reg (list replace)))))
-        (prog1 res
-          (objed--switch-to 'defun nil odata))))))
-
-(defun objed-eval-exp (&optional replace)
-  "Eval expression at point, fallback to defun.
-
-If REPLACE is non-nil replace evaluated code with result."
-  (interactive "P")
-  (let* ((obj (cond ((objed--at-object-p 'bracket)
-                       'bracket)
-                    ((or (objed--at-object-p 'identifier)
-                         (objed--inside-object-p 'identifier))
-                     'identifier)
-                    (t 'defun)))
-         (odata (objed--get-object obj))
-         (res (and odata
-                   (apply 'objed--eval-func
-                          (append (objed--current odata) (list replace))))))
-    (if replace
-        (objed--switch-to 'char)
-      (when res
-        (prog1 res
-          (objed--switch-to obj nil odata))))))
 
 
 (defun objed-pipe-region (beg end cmd &optional variant)
@@ -2987,8 +2981,6 @@ Commands can be shell commands or region commands."
              ((and (require lib nil t)
                    (commandp cmd))
               (call-interactively cmd))))))
-
-;;;; Utility expressions
 
 (defun objed-switch-goto-beg (_obj beg _end)
   "Move to BEG.
