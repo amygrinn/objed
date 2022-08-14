@@ -453,257 +453,274 @@ To avoid loading `avy' set this var before activating `objed-mode.'"
 
 ;;;; Keymaps:
 
-(defmacro objed-make-keymap (definitions &optional with-defaults)
-  "Make and return a sparse keymap with DEFINITIONS.
+(cl-defmacro objed-make-keymap (name
+                                docstring
+                                &rest definitions
+                                &key prefix
+                                &key with-defaults
+                                &allow-other-keys)
+  "Make a sparse keymap with DEFINITIONS and set it as NAME.
 
-DEFINITIONS evaluates to a list of cons cells with a key sequence
-string as the car and the function symbol as the cdr.
+DOCSTRING is the documentation string for the variable NAME.
+
+If PREFIX is non-nil, the variable's function definition is set
+to the sparse keymap. The variable NAME can then be used as a
+prefix binding.
 
 If WITH-DEFAULTS is non-nil, the keymap is initialized with basic
 bindings for numeric arguments and help.  Other single character
-keys default to `objed-undefined'."
-  `(let ((map (make-sparse-keymap)))
-     ,@(if with-defaults
-           `((dolist (c (number-sequence ?a ?z))
-               (define-key map (char-to-string c) 'objed-undefined))
-             (dolist (d (number-sequence ?0 ?9))
-               (define-key map (char-to-string d) 'digit-argument))
-             (dolist (k '("-" "C--" "M--"))
-               (define-key map (kbd k) 'negative-argument))
-             (define-key map (kbd "C-h ?") 'objed-describe-prefix-bindings)))
-     (mapc
-      (lambda (k)
-        (define-key map (kbd (car k)) (cdr k)))
-      ,definitions)
-     map))
+keys default to `objed-undefined'.
 
-(defvar objed-mode-map
-  (objed-make-keymap
-   '(("M-#" . objed-activate-object)
-     ("M-[" . objed-beg-of-object-at-point)
-     ("M-]" . objed-end-of-object-at-point)
-     ("C-," . objed-prev-identifier)
-     ("C-." . objed-next-identifier)
-     ("C-<" . objed-first-identifier)
-     ("C->" . objed-last-identifier)))
-  "Keymap for /function`objed-mode'.")
+DEFINITIONS are cons cells with a key sequence string as the car
+and the function symbol as the cdr."
+  (declare (indent 1) (doc-string 2))
+  (dolist (key '(:prefix :with-defaults))
+    (cl-remf definitions key))
+  `(eval-and-compile
+     (let ((map (make-sparse-keymap)))
+       ,@(if with-defaults
+             '((dolist (c (number-sequence ?a ?z))
+                 (define-key map (char-to-string c) 'objed-undefined))
+               (dolist (d (number-sequence ?0 ?9))
+                 (define-key map (char-to-string d) 'digit-argument))
+               (dolist (k '("-" "C--" "M--"))
+                 (define-key map (kbd k) 'negative-argument))
+               (define-key map (kbd "C-h ?") 'objed-describe-prefix-bindings)))
+       (mapc
+        (lambda (k)
+          (define-key map (kbd (car k)) (cdr k)))
+        ',definitions)
+       (defvar ,name map ,docstring)
+       ,@(if prefix `((fset ',name map))))))
 
-(defvar objed-map
-  (objed-make-keymap
-   '(;; Common Emacs keys
-     ("C-g" . objed-toggle)
-     ("?" . objed-show-top-level)
-     ("q" . objed-quit-window-or-reformat)
-     ("g" . objed-quit)
-     ("C-u" . universal-argument)
-     ("0" . univeral-argument)
+(objed-make-keymap objed-mode-map
+  "Keymap for /function`objed-mode'."
+  ("M-#" . objed-activate-object)
+  ("M-[" . objed-beg-of-object-at-point)
+  ("M-]" . objed-end-of-object-at-point)
+  ("C-," . objed-prev-identifier)
+  ("C-." . objed-next-identifier)
+  ("C-<" . objed-first-identifier)
+  ("C->" . objed-last-identifier))
 
-     ;; Help
-     ("C-h k" . objed-describe-key)
-     ("C-h n" . which-key-show-next-page-cycle)
-     ("C-h p" . which-key-show-previous-page-cycle)
-
-     ;; Append mode
-     ("C-M-w" . objed-append-mode)
-     ("W" . objed-append-mode)
-
-     ;; Undo/redo
-     ("/" . objed-undo)
-     ("u" . objed-undo)
-     ("U" . objed-undo-redo)
-     ("~" . objed-undo-in-object)
-     ("l" . objed-last)
-
-     ;; General movement
-     ("f" . objed-right-char)
-     ("b" . objed-left-char)
-     ("F" . objed-forward-symbol)
-     ("B" . objed-objed-backward-symbol)
-     ("s" . objed-forward-word)
-     ("r" . objed-backward-word)
-     ("S" . objed-objed--forward-sexp)
-     ("R" . objed-objed--backward-sexp)
-     ("p" . objed-previous-line)
-     ("n" . objed-next-line)
-     ("E" . objed-forward-defun)
-     ("A" . objed-beginning-of-defun)
-     ("N" . objed-forward-paragraph)
-     ("P" . objed-backward-paragraph)
-     ("`" . objed-backward-until-context)
-     ("'" . objed-forward-until-context)
-     ("[" . objed-previous)
-     ("]" . objed-next)
-
-     ;; Identifiers
-     ("." . objed-goto-next-identifier)
-     ("," . objed-goto-prev-identifier)
-
-     ;; Top and bottom
-     ("<home>" . objed-top-object)
-     ("<" . objed-top-object)
-     ("<end>" . objed-bottom-object)
-     (">" . objed-bottom-object)
-
-     ;; Block expansion
-     ("_" . objed-include)
-     ("(" . objed-include-backward)
-     (")" . objed-include-forward)
-     ("a" . objed-beg-of-block)
-     ("e" . objed-end-of-block)
-     ("h" . objed-expand-block)
-     ("@" . objed-extend)
-     ("O" . objed-expand-context)
-
-     ;; Object state
-     ("t" . objed-toggle-state)
-     ("j" . objed-toggle-side)
-
-     ;; Edit objects
-     ("i" . objed-quit)
-     ("c" . objed-del-insert)
-     ("k" . objed-kill)
-     ("K" . objed-kill)
-     ("w" . objed-copy)
-     ("d" . objed-delete)
-     ("D" . objed-delete)
-     ("y" . objed-yank)
-
-     ;; Move objects
-     ("{" . objed-move-object-backward)
-     ("}" . objed-move-object-forward)
-     ("\\" . objed-objed-indent)
-     ("C-<left>" . objed-indent-left)
-     ("C-<right>" . objed-indent-right)
-     ("M-<right>" . objed-indent-to-right-tab-stop)
-     ("M-<left>" . objed-indent-to-left-tab-stop)
-     ("S-<left>" . objed-move-object-backward)
-     ("S-<right>" . objed-move-object-forward)
-     ("S-<up>" . objed-move-object-backward)
-     ("S-<down>" . objed-move-object-forward)
-
-     ;; Marking
-     ("m" . objed-mark)
-     ("M" . objed-toggle-mark-backward)
-     ("*" . objed-mark-more)
-     ("C-<SPC>" . set-mark-command)
-     ("C-x C-x" . objed-exchange-point-and-mark)
-
-     ;; Miscellaneous
-     (";" . objed-objed-comment-or-uncomment-region)
-     ("$" . objed-flyspell-region)
-     ("\"" . objed-objed-electric-pair)
-     ("^" . objed-raise)
-
-     ;; Prefix keys
-     ("o" . objed-object-map)
-     ("x" . objed-op-map)
-     ("v" . objed-user-map)
-     ("z" . objed-other-user-map)
-
-     ;; Special commands
-     ("G" . objed-ace)
-     ("%" . objed-replace)
-     (":" . objed-eval-expression)
-     ("&" . objed-objed-pipe-region)
-     ("|" . objed-objed-ipipe)
-     ("!" . objed-execute)
-     ("C-<return>" . objed-objed-run-or-eval)
-     ("S-<return>" . objed-objed-comment-duplicate)
-     ("M-<return>" . objed-objed-duplicate-down)
-     ("C-M-<return>" . objed-insert-new-object)
-
-     ;; Resize windows
-     ("s-<left>" . objed-move-window-line-left)
-     ("s-<right>" . objed-move-window-line-right)
-     ("s-<up>" . objed-move-window-line-up)
-     ("s-<down>" . objed-move-window-line-down)
-
-     ;; Slurp and barf
-     ("C-M-<left>" . objed-forward-barf-sexp)
-     ("C-M-<right>" . objed-forward-slurp-sexp)
-     ("C-S-<left>" . objed-forward-barf-sexp)
-     ("C-S-<right>" . objed-forward-slurp-sexp)
-     ("C-M-<down>" . objed-backward-barf-sexp)
-     ("C-M-<up>" . objed-backward-slurp-sexp)
-     ("C-S-<down>" . objed-backward-barf-sexp)
-     ("C-S-<up>" . objed-backward-slurp-sexp))
-   t)
-  "Keymap for commands when `objed' is active.")
-
-(defvar objed-object-map
-  (objed-make-keymap
-   '(("%" . objed-contents-object)
-     ("*" . objed-section-object)
-     ("." . objed-sentence-object)
-     (";" . objed-comment-object)
-     ("=" . objed-face-object)
-     ("SPC" . objed-region-object)
-     ;; choose via completion
-     ("TAB" . objed-object-x)
-     ("[" . objed-page-object)
-     ("a" . objed-block-object)
-     ("b" . objed-bracket-object)
-     ("c" . objed-char-object)
-     ("d" . objed-defun-object)
-     ("e" . objed-error-object)
-     ("f" . objed-file-object)
-     ("h" . objed-buffer-object)
-     ("i" . objed-indent-object)
-     ("l" . objed-line-object)
-     ("m" . objed-email-object)
-     ("n" . objed-output-object)
-     ("o" . objed-expand-context)
-     ("p" . objed-paragraph-object)
-     ("q" . objed-textblock-object)
-     ("s" . objed-string-object)
-     ("t" . objed-tag-object)
-     ("u" . objed-url-object)
-     ("w" . objed-word-object)
-     ("x" . objed-sexp-object)
-     ("y" . objed-symbol-object)
-     ("z" . objed-ace-object))
-   t)
+(objed-make-keymap objed-map
   "Keymap used for additional text-objects by `objed'.
 
-To define new objects see `objed-define-object'.")
+To define new objects see `objed-define-object'."
+  :with-defaults t
+  ;; Common Emacs keys
+  ("C-g" . objed-toggle)
+  ("?" . objed-show-top-level)
+  ("q" . objed-quit-window-or-reformat)
+  ("g" . objed-quit)
+  ("C-u" . universal-argument)
+  ("0" . univeral-argument)
+  
+  ;; Help
+  ("C-h k" . objed-describe-key)
+  ("C-h n" . which-key-show-next-page-cycle)
+  ("C-h p" . which-key-show-previous-page-cycle)
+  
+  ;; Append mode
+  ("C-M-w" . objed-append-mode)
+  ("W" . objed-append-mode)
+  
+  ;; Undo/redo
+  ("/" . objed-undo)
+  ("u" . objed-undo)
+  ("U" . objed-undo-redo)
+  ("~" . objed-undo-in-object)
+  ("l" . objed-last)
+  
+  ;; General movement
+  ("f" . objed-right-char)
+  ("b" . objed-left-char)
+  ("F" . objed-forward-symbol)
+  ("B" . objed-objed-backward-symbol)
+  ("s" . objed-forward-word)
+  ("r" . objed-backward-word)
+  ("S" . objed-objed--forward-sexp)
+  ("R" . objed-objed--backward-sexp)
+  ("p" . objed-previous-line)
+  ("n" . objed-next-line)
+  ("E" . objed-forward-defun)
+  ("A" . objed-beginning-of-defun)
+  ("N" . objed-forward-paragraph)
+  ("P" . objed-backward-paragraph)
+  ("`" . objed-backward-until-context)
+  ("'" . objed-forward-until-context)
+  ("[" . objed-previous)
+  ("]" . objed-next)
+  
+   ;; Identifiers
+  ("." . objed-goto-next-identifier)
+  ("," . objed-goto-prev-identifier)
+  
+  ;; Top and bottom
+  ("<home>" . objed-top-object)
+  ("<" . objed-top-object)
+  ("<end>" . objed-bottom-object)
+  (">" . objed-bottom-object)
+  
+  ;; Block expansion
+  ("_" . objed-include)
+  ("(" . objed-include-backward)
+  (")" . objed-include-forward)
+  ("a" . objed-beg-of-block)
+  ("e" . objed-end-of-block)
+  ("h" . objed-expand-block)
+  ("@" . objed-extend)
+  ("O" . objed-expand-context)
+  
+  ;; Object state
+  ("t" . objed-toggle-state)
+  ("j" . objed-toggle-side)
+  
+  ;; Edit objects
+  ("i" . objed-quit)
+  ("c" . objed-del-insert)
+  ("k" . objed-kill)
+  ("K" . objed-kill)
+  ("w" . objed-copy)
+  ("d" . objed-delete)
+  ("D" . objed-delete)
+  ("y" . objed-yank)
+  
+  ;; Move objects
+  ("{" . objed-move-object-backward)
+  ("}" . objed-move-object-forward)
+  ("\\" . objed-objed-indent)
+  ("C-<left>" . objed-indent-left)
+  ("C-<right>" . objed-indent-right)
+  ("M-<right>" . objed-indent-to-right-tab-stop)
+  ("M-<left>" . objed-indent-to-left-tab-stop)
+  ("S-<left>" . objed-move-object-backward)
+  ("S-<right>" . objed-move-object-forward)
+  ("S-<up>" . objed-move-object-backward)
+  ("S-<down>" . objed-move-object-forward)
+  
+  ;; Marking
+  ("m" . objed-mark)
+  ("M" . objed-toggle-mark-backward)
+  ("*" . objed-mark-more)
+  ("C-<SPC>" . set-mark-command)
+  ("C-x C-x" . objed-exchange-point-and-mark)
+  
+  ;; Miscellaneous
+  (";" . objed-objed-comment-or-uncomment-region)
+  ("$" . objed-flyspell-region)
+  ("\"" . objed-objed-electric-pair)
+  ("^" . objed-raise)
+  
+  ;; Prefix keys
+  ("o" . objed-object-map)
+  ("x" . objed-op-map)
+  ("v" . objed-user-map)
+  ("z" . objed-other-user-map)
+  
+  ;; Special commands
+  ("G" . objed-ace)
+  ("%" . objed-replace)
+  (":" . objed-eval-expression)
+  ("&" . objed-objed-pipe-region)
+  ("|" . objed-objed-ipipe)
+  ("!" . objed-execute)
+  ("C-<return>" . objed-objed-run-or-eval)
+  ("S-<return>" . objed-objed-comment-duplicate)
+  ("M-<return>" . objed-objed-duplicate-down)
+  ("C-M-<return>" . objed-insert-new-object)
+  
+  ;; Resize windows
+  ("s-<left>" . objed-move-window-line-left)
+  ("s-<right>" . objed-move-window-line-right)
+  ("s-<up>" . objed-move-window-line-up)
+  ("s-<down>" . objed-move-window-line-down)
+  
+  ;; Slurp and barf
+  ("C-M-<left>" . objed-forward-barf-sexp)
+  ("C-M-<right>" . objed-forward-slurp-sexp)
+  ("C-S-<left>" . objed-forward-barf-sexp)
+  ("C-S-<right>" . objed-forward-slurp-sexp)
+  ("C-M-<down>" . objed-backward-barf-sexp)
+  ("C-M-<up>" . objed-backward-slurp-sexp)
+  ("C-S-<down>" . objed-backward-barf-sexp)
+  ("C-S-<up>" . objed-backward-slurp-sexp))
 
-(defvar objed-op-map
-  (objed-make-keymap
-   `(("TAB" . objed-op-x)
-     ("c" . objed-objed-case-op)
-     ("x" . objed-eval-defun)
-     ("e" . objed-eval-exp)
-     ("y" . objed-insert)
-     ("i" . insert-file)
-     ("q" . read-only-mode)
-     ("r" . ctl-x-r-map)
-     ("n" . objed-narrow)
-     ("u" . objed-undo)
-     ("d" . dired-jump)
-     ("s" . save-buffer)
-     ("f" . find-file)
-     ("w" . write-file)
-     ("v" . find-alternate-file)
-     ("b" . switch-to-buffer)
-     ("o" . objed-other-window)
-     ("k" . objed-kill-buffer)
-     ("j" . imenu)
-     ("0" . delete-window)
-     ("1" . delete-other-window)
-     ("2" . split-window-vertically)
-     ("3" . split-window-horizontally))
-   t)
+(objed-make-keymap objed-object-map
+  "Keymap used for additional text-objects by `objed'.
+To define new objects see `objed-define-object'."
+  :with-defaults t
+  :prefix t
+  ("%" . objed-contents-object)
+  ("*" . objed-section-object)
+  ("." . objed-sentence-object)
+  (";" . objed-comment-object)
+  ("=" . objed-face-object)
+  ("SPC" . objed-region-object)
+  ;; choose via completion
+  ("TAB" . objed-object-x)
+  ("[" . objed-page-object)
+  ("a" . objed-block-object)
+  ("b" . objed-bracket-object)
+  ("c" . objed-char-object)
+  ("d" . objed-defun-object)
+  ("e" . objed-error-object)
+  ("f" . objed-file-object)
+  ("h" . objed-buffer-object)
+  ("i" . objed-indent-object)
+  ("l" . objed-line-object)
+  ("m" . objed-email-object)
+  ("n" . objed-output-object)
+  ("o" . objed-expand-context)
+  ("p" . objed-paragraph-object)
+  ("q" . objed-textblock-object)
+  ("s" . objed-string-object)
+  ("t" . objed-tag-object)
+  ("u" . objed-url-object)
+  ("w" . objed-word-object)
+  ("x" . objed-sexp-object)
+  ("y" . objed-symbol-object)
+  ("z" . objed-ace-object))
+
+(objed-make-keymap objed-op-map
   "Map for additional operations called via a prefix from `objed-map'.
 
-To define new operations see `objed-define-op'.")
+To define new operations see `objed-define-op'."
+  :prefix t
+  :with-defaults t
+  ("TAB" . objed-op-x)
+  ("c" . objed-objed-case-op)
+  ("x" . objed-eval-defun)
+  ("e" . objed-eval-exp)
+  ("y" . objed-insert)
+  ("i" . insert-file)
+  ("q" . read-only-mode)
+  ("r" . ctl-x-r-map)
+  ("n" . objed-narrow)
+  ("u" . objed-undo)
+  ("d" . dired-jump)
+  ("s" . save-buffer)
+  ("f" . find-file)
+  ("w" . write-file)
+  ("v" . find-alternate-file)
+  ("b" . switch-to-buffer)
+  ("o" . objed-other-window)
+  ("k" . objed-kill-buffer)
+  ("j" . imenu)
+  ("0" . delete-window)
+  ("1" . delete-other-window)
+  ("2" . split-window-vertically)
+  ("3" . split-window-horizontally))
 
-(defvar objed-user-map
-  (objed-make-keymap nil t)
-  "Keymap for custom user bindings.")
+(objed-make-keymap objed-user-map
+  "Keymap for custom user bindings."
+  :with-defaults t
+  :prefix t)
 
-(defvar objed-other-user-map
-  (objed-make-keymap nil t)
-  "Keymap for custom user bindings.")
+(objed-make-keymap objed-other-user-map
+  "Keymap for custom user bindings."
+  :with-defaults t
+  :prefix t)
 
 (defvar objed-dispatch-map
   (let ((map (make-composed-keymap nil objed-object-map)))
