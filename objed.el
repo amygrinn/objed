@@ -514,7 +514,7 @@ To define new objects see `objed-define-object'."
   ("q" . objed-quit-window-or-reformat)
   ("g" . objed-quit)
   ("C-u" . universal-argument)
-  ("0" . univeral-argument)
+  ("0" . universal-argument)
   
   ;; Help
   ("C-h k" . objed-describe-key)
@@ -780,6 +780,9 @@ Don't modify this list manually, use `objed-define-dispatch'.")
 
 (defvar objed--saved-cursor nil
   "Cursor color before objed got initialized.")
+
+(defvar objed--saved-cursor-type nil
+  "Cursor type before objed got initialized.")
 
 (defvar objed--hl-cookie nil
   "The remapping cookie for `hl-line' face.")
