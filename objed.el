@@ -342,6 +342,25 @@ state. Commands added to this list wont do that."
   "Cursor color to use when `objed' is active."
   :type 'color)
 
+(defcustom objed-cursor-type 'bar
+  "Cursor shape to use when `objed' is active."
+  :type '(choice
+          (const :tag "Frame default" t)
+          (const :tag "Filled box" box)
+          (cons :tag "Box with specified size"
+                (const box)
+                integer)
+          (const :tag "Hollow cursor" hollow)
+          (const :tag "Vertical bar" bar)
+          (cons :tag "Vertical bar with specified height"
+                (const bar)
+                integer)
+          (const :tag "Horizontal bar" hbar)
+          (cons :tag "Horizontal bar with specified width"
+                (const hbar)
+                integer)
+          (const :tag "None " nil)))
+
 (defcustom objed-which-key-order #'which-key-description-order
   "Key sort order to use for which key help popups."
   :type 'function)
@@ -1006,10 +1025,12 @@ interferring with `objed'."
   `(let ((overriding-terminal-local-map nil)
          (minibuffer-setup-hook (remq 'objed--reset minibuffer-setup-hook))
          (objed--with-allow-input t))
+     (setq-local cursor-type objed--saved-cursor-type)
      (set-cursor-color objed--saved-cursor)
      (unwind-protect (progn ,@body)
        ;; body might exit objed...
        (when objed--buffer
+         (setq-local cursor-type objed-cursor-type)
          (set-cursor-color objed-cursor-color)))))
 
 (defmacro objed--save-state (&rest body)
@@ -3319,6 +3340,8 @@ that any previous instance of this object is used."
   (setq objed--saved-cursor
         (or (frame-parameter nil 'cursor-color)
             (face-attribute 'cursor :background nil 'default)))
+  (setq objed--saved-cursor-type (frame-parameter nil 'cursor-type))
+  (setq-local cursor-type objed-cursor-type)
   (set-cursor-color objed-cursor-color)
 
   ;; init object
@@ -4244,6 +4267,8 @@ Reset and reinitilize objed if appropriate."
 
       (when objed--saved-cursor
         (set-cursor-color objed--saved-cursor))
+      (when objed--saved-cursor-type
+        (setq-local cursor-type objed--saved-cursor-type))
       (objed--reset--objed-buffer)
       (remove-hook 'post-command-hook 'objed--check-buffer)
       (setq objed--block-p nil)
