@@ -10,7 +10,7 @@
     (kill-buffer guess-checkdoc-error-buffer-name))
   (mapc (lambda (f)
           (checkdoc-file f))
-        (file-expand-wildcards "*.el"))
+        (directory-files-recursively default-directory "^[^.].*\\.el$"))
   (when-let ((buf (get-buffer guess-checkdoc-error-buffer-name)))
     (with-current-buffer buf
       (unless (= 0 (buffer-size))
@@ -29,7 +29,7 @@
   (fset #'package-lint--test-keyseq #'ignore)
   (fset #'package-lint--check-eval-after-load #'ignore)
   (let ((success t))
-    (dolist (file (file-expand-wildcards "*.el"))
+    (dolist (file (directory-files-recursively default-directory "^[^.].*\\.el$"))
       (with-temp-buffer
         (insert-file-contents file t)
         (emacs-lisp-mode)

@@ -1,0 +1,3 @@
+[submodule "deps/key-game"]
+	path = deps/key-game
+	url = git@gitlab.com:tygrdev/key-game.git

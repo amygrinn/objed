@@ -126,7 +126,7 @@
 (require 'face-remap)
 (require 'subword)
 (require 'hl-line)
-(require 'objed-objects)
+(require 'objed-objects "objed-objects")
 
 ;;;; External variables
 
