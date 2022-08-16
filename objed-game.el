@@ -3,11 +3,11 @@
 ;; Copyright (C) 2021 Free Software Foundation, Inc.
 
 ;; Author: Tyler Grinn <tylergrinn@gmail.com>
-;; Version: 0.0.1
+;; Version: 0.8.4
 ;; File: objed-game.el
 ;; Keywords: games
+;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
 ;; URL: https://gitlab.com/tygrdev/key-game-example
-;; Package-Requires: ((emacs "25.1") (objed "0.8.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
