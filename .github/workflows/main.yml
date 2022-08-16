@@ -13,6 +13,8 @@ jobs:
         with:
           version: 28.1
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Lint
         run: make lint
 
@@ -36,6 +38,8 @@ jobs:
         with:
           version: ${{ matrix.emacs_version }}
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Test
         run: make test
 
@@ -59,6 +63,8 @@ jobs:
         with:
           version: ${{ matrix.emacs_version }}
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Package
         run: make package
         
