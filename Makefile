@@ -10,10 +10,10 @@ lint:
 compile: clean
 	$(EMACS) -Q -batch -l test/deps.el -l test/elpa.el -l test/make-compile.el
 
-test: compile lint
+test: compile
 	$(EMACS) -Q -batch -l test/elpa.el -l test/make-test.el
 
-package: compile
+package:
 	$(EMACS) -Q -batch -l test/elpa.el -l test/make-package.el
 
 clean:
