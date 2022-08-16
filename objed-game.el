@@ -30,8 +30,8 @@
 
 ;;;; Requirements
 
-(require 'key-game "deps/key-game/key-game")
-(require 'objed "objed")
+(require 'key-game)
+(require 'objed)
 
 ;;;; key-game-objed
 

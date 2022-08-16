@@ -10,12 +10,10 @@
        (files (append
                (list descriptor-file)
                (directory-files default-directory nil "^[^.].*\\.el$")
-               (mapcar #'file-relative-name
-                       (directory-files-recursively
-                        (expand-file-name "deps" default-directory)
-                        "^[^.].*\\.el$")))))
+               (directory-files-recursively
+                (expand-file-name "deps" default-directory)
+                "^[^.].*\\.el$"))))
   (or (file-exists-p out) (make-directory out))
-  (delete-file descriptor-file)
   (with-temp-file descriptor-file
     (insert ";; -*- no-byte-compile: t; -*-\n")
     (pp `(define-package ,name ,(package-version-join version)
@@ -27,8 +25,9 @@
         (current-buffer)))
   (shell-command
    (concat (executable-find "tar")
-           " --transform 's/^/" package-name "\\//' "
-           " -cf " out "/" package-name ".tar "
+           ;; Flatten files
+           " --transform 's;^\\(.*/\\)*;" package-name "/;' "
+           " -cvf " out "/" package-name ".tar "
            (mapconcat #'identity files " ")))
   (delete-file descriptor-file))
 
