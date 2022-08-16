@@ -138,7 +138,7 @@
 (defvar ivy-sort-function-alist)
 (defvar edit-indirect--overlay)
 (defvar eval-sexp-fu-flash-mode)
-
+(defvar comment-combine-change-calls)
 
 ;;;; External functions
 
