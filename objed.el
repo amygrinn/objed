@@ -4013,10 +4013,12 @@ With ARG, slurp all proceeding sexps into object."
           (delete-region (- (point) 1)
                          (save-excursion (objed--skip-ws) (point)))
         (delete-char -1))
-      (ignore-error 'scan-error
-        (forward-sexp)
-        (if arg
-            (while t (forward-sexp))))
+      (condition-case nil
+          (progn
+            (forward-sexp)
+            (if arg
+                (while t (forward-sexp))))
+        (scan-error nil))
       (insert close)
       (unless (eq 'string objed--object)
         (indent-region start (point))))))
@@ -4067,10 +4069,12 @@ With ARG, slurp all preceding sexps into object."
           (delete-region (save-excursion (objed--skip-ws t) (point))
                          (+ (point) 1))
         (delete-char 1))
-      (ignore-error 'scan-error
-        (backward-sexp)
-        (if arg
-            (while t (forward-sexp))))
+      (condition-case nil
+          (progn
+            (backward-sexp)
+            (if arg
+                (while t (forward-sexp))))
+        (scan-error nil))
       (insert open)
       (unless (eq 'string objed--object)
         (indent-region (point) end)))))
