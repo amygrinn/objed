@@ -1,0 +1,22 @@
+name: Package
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: purcell/setup-emacs@master
+        with:
+          version: 28.1
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Package
+        run: make package
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/*"

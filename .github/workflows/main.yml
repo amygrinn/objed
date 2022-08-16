@@ -1,4 +1,4 @@
-name: Lint and package
+name: Lint and test
 
 on:
   pull_request:
@@ -42,16 +42,3 @@ jobs:
           submodules: recursive
       - name: Test
         run: make test
-
-  package:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: purcell/setup-emacs@master
-        with:
-          version: 28.1
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Package
-        run: make package
-        
