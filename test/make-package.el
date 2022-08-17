@@ -27,7 +27,7 @@
    (concat (executable-find "tar")
            ;; Flatten files
            " --transform 's;^\\(.*/\\)*;" package-name "/;' "
-           " -cvf " out "/" package-name ".tar "
-           (mapconcat #'identity files " ")))
+           " -cvf " out package-name ".tar "
+           (string-join files " ")))
   (delete-file descriptor-file))
 
