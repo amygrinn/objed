@@ -24,7 +24,8 @@
 
 ;;; Commentary:
 
-;; Train yourself to use Objed!
+;; Train yourself to use Objed!  Use the command `objed-game' to
+;; launch the main menu.
 
 ;;; Code:
 
@@ -41,28 +42,15 @@
   :title "Objed Tutorial Game"
   :message "Welcome to the Objed game!"
   :setup (objed-local-mode)
-  :mode lisp-interaction-mode
-  objed-game-intro
-  objed-game-level-1
-  objed-game-level-2
-  objed-game-level-3
-  objed-game-level-4
-  objed-game-level-4a
-  objed-game-level-5
-  objed-game-level-6
-  objed-game-combined)
+  :mode lisp-interaction)
 
-;;;; Intro
-
-(key-game-level objed-game-intro
+(objed-game-level intro
   "Level 0: Introduction"
-  :next objed-game-level-1
-  :intro objed-game-intro-frame)
-
-(key-game-frame objed-game-intro-frame
-  :read-only t
-  :mode fundamental-mode
-  (insert (substitute-command-keys "\\<objed-mode-map>
+  :next level-1
+  (intro
+   :read-only t
+   :mode fundamental
+   "
 **********************************************************************
 
                            INTRODUCTION
@@ -95,29 +83,18 @@ editing state again.
    `objed-cmd-alist'
 
 >> Type \\[keyboard-quit] again to quit objed mode
-"))
-  (let ((fill-column 70))
-    (fill-region (point-min) (point-max)))
-  (goto-char (point-min)))
+"
+   (let ((fill-column 70))
+     (fill-region (point-min) (point-max)))))
 
-;;;; Level 1:
-
-(key-game-level objed-game-level-1
+(objed-game-level level-1
   "Level 1: Entering Objed"
-  :intro objed-game-level-1-intro
-  :next objed-game-level-2
-  objed-game-level-1-1
-  objed-game-level-1-2
-  objed-game-level-1-3
-  objed-game-level-1-4
-  objed-game-level-1-5
-  objed-game-level-1-6
-  objed-game-level-1-7)
-
-(key-game-frame objed-game-level-1-intro
-  :read-only t
-  :mode fundamental-mode
-  (insert (substitute-command-keys "\\<objed-mode-map>
+  :next level-2
+  :random t
+  (intro
+   :read-only t
+   :mode fundamental
+   "
 **********************************************************************
 
                        ENTERING OBJED MODE
@@ -151,70 +128,55 @@ objed with the relevant object type.
    s-expression and activate `objed-mode' with the `sexp' object
    type
 
-Once in `objed-mode', you can change the object type by using a
-standard movement key.
-"))
-  (let ((fill-column 70))
-    (fill-region (point-min) (point-max)))
-  (goto-char (point-min)))
+Once objed is activated, you can change the object type by using
+a standard movement key.
+"
+   (let ((fill-column 70))
+     (fill-region (point-min) (point-max))))
+  (frame
+   :read-only t
+   :commands (next-line)
+   "\n\n               \nSelect this line and activate objed."
+   (goto-char 18))
+  (frame
+   :read-only t
+   :commands (previous-line)
+   "\n\nSelect this line and activate objed.\n             "
+   (goto-char (point-max)))
+  (frame
+   :read-only t
+   :commands (forward-word)
+   "\n\nSelect the word \"cat\" and activate objed."
+   (goto-char 18))
+  (frame
+   :read-only t
+   :commands (backward-word)
+   "\n\nSelect the word \"dog\" and activate objed."
+   (goto-char 24))
+  (frame
+   :read-only t
+   :commands (right-char)
+   "\n\nSelect the character 'a' and activate objed."
+   (goto-char 24))
+  (frame
+   :read-only t
+   :commands (left-char)
+   "\n\nSelect the character 'b' and activate objed."
+   (goto-char 26))
+  (frame
+   :read-only t
+   :commands (forward-sexp)
+   "\n\nSelect the s-expression (emacs-init-time) and activate objed."
+   (goto-char 26)))
 
-(key-game-frame objed-game-level-1-1
-  :read-only t
-  :commands (next-line)
-  (insert "\n\n               \nSelect this line and enter objed mode.")
-  (goto-char 18))
-
-(key-game-frame objed-game-level-1-2
-  :read-only t
-  :commands (previous-line)
-  (insert "\n\nSelect this line and enter objed mode.\n             "))
-
-(key-game-frame objed-game-level-1-3
-  :read-only t
-  :commands (forward-word)
-  (insert  "\n\nSelect the word \"cat\" and enter objed mode.")
-  (goto-char 18))
-
-(key-game-frame objed-game-level-1-4
-  :read-only t
-  :commands (backward-word)
-  (insert "\n\nSelect the word \"dog\" and enter objed mode.")
-  (goto-char 24))
-
-(key-game-frame objed-game-level-1-5
-  :read-only t
-  :commands (right-char)
-  (insert "\n\nSelect the character 'a' and enter objed mode.")
-  (goto-char 24))
-
-(key-game-frame objed-game-level-1-6
-  :read-only t
-  :commands (left-char)
-  (insert "\n\nSelect the character 'b' and enter objed mode.")
-  (goto-char 26))
-
-(key-game-frame objed-game-level-1-7
-  :read-only t
-  :commands (forward-sexp)
-  (insert "\n\nSelect the s-expression (emacs-init-time) and enter objed mode.")
-  (goto-char 26))
-
-;;;; Level 2:
-
-(key-game-level objed-game-level-2
+(objed-game-level level-2
   "Level 2: Exiting objed"
-  :intro objed-game-level-2-intro
-  :next objed-game-level-3
-  objed-game-level-2-1
-  objed-game-level-2-2
-  objed-game-level-2-3
-  objed-game-level-2-4
-  objed-game-level-2-5)
-
-(key-game-frame objed-game-level-2-intro
-  :read-only t
-  :mode fundamental-mode
-  (insert (substitute-command-keys (concat "\\<objed-mode-map>
+  :next level-3
+  :random t
+  (intro
+   :read-only t
+   :mode fundamental
+   "\\<objed-map>
 **********************************************************************
 
                          EXITING OBJED
@@ -227,81 +189,63 @@ and exit objed. Character movement exits objed, as well. This
 makes it convenient to move around and continue by
 adding/deleting text.
 
-
-You can also type " (propertize "g" 'font-lock-face 'help-key-binding) "
-or \\[keyboard-quit] to exit `objed-mode'
-")))
-  (let ((fill-column 70))
-    (fill-region (point-min) (point-max)))
-  (goto-char (point-min)))
-
-(key-game-frame objed-game-level-2-1
-  :keys ("SPC")
-  (insert "\n\nExit objed mode and add a space between applepear.")
-  (goto-char 48)
-  (objed-activate 'char))
-
-(key-game-frame objed-game-level-2-2
-  :commands (forward-char)
-  :read-only t
-  (insert "\n\nMove the cursor one character to the right and exit objed mode.")
-  (goto-char 48)
-  (objed-activate 'char))
-
-(key-game-frame objed-game-level-2-3
-  :commands (backward-char)
-  :read-only t
-  (insert "\n\nMove the cursor to the left one character and exit objed mode.")
-  (goto-char 48)
-  (objed-activate 'char))
-
-(key-game-frame objed-game-level-2-4
-  :keys ("<return>")
-  (insert "\n\nCreate a new line at the end of this sentence and exit objed mode.\n")
-  (goto-char 69)
-  (objed-activate 'line))
-
-(key-game-frame objed-game-level-2-5
-  :read-only t
-  :commands ((or objed-quit keyboard-quit))
-  (insert "\n\nExit objed mode without moving the cursor.\n")
-  (goto-char 30)
-  (objed-activate 'line))
+You can also type \\[objed-quit] or
+\\<global-map>\\[keyboard-quit] to exit objed."
+   (let ((fill-column 70))
+     (fill-region (point-min) (point-max))))
+  (frame
+   :keys ("SPC")
+   "\n\nExit objed mode and add a space between applepear."
+   (goto-char 48)
+   (objed-activate 'char))
+  (frame
+   :commands (forward-char)
+   :read-only t
+   "\n\nMove the cursor one character to the right and exit objed mode."
+   (goto-char 48)
+   (objed-activate 'char))
+  (frame
+   :commands (backward-char)
+   :read-only t
+   "\n\nMove the cursor to the left one character and exit objed mode."
+   (goto-char 48)
+   (objed-activate 'char))
+  (frame
+   :keys ("<return>")
+   "\n\nCreate a new line at the end of this sentence and exit objed mode.\n"
+   (goto-char 69)
+   (objed-activate 'line))
+  (frame
+   :read-only t
+   :commands ((or objed-quit keyboard-quit))
+   "\n\nExit objed mode without moving the cursor.\n"
+   (goto-char 30)
+   (objed-activate 'line)))
 
 
-;;;; Level 3:
-
-(key-game-level objed-game-level-3
+(objed-game-level level-3
   "Level 3: Object state"
-  :intro objed-game-level-3-intro
-  :next objed-game-level-4
-  objed-game-level-3-1
-  objed-game-level-3-2
-  objed-game-level-3-3
-  objed-game-level-3-4
-  objed-game-level-3-5
-  objed-game-level-3-6
-  objed-game-level-3-7)
-
-(key-game-frame objed-game-level-3-intro
-  :read-only t
-  :mode fundamental-mode
-  (insert (substitute-command-keys "\\<objed-mode-map>
+  :next level-4
+  :random t
+  (intro
+   :read-only t
+   :mode fundamental
+   "\\<objed-map>
 **********************************************************************
 
                            OBJECT STATE
 
 **********************************************************************
 
-In `objed-mode', the object state is either inner or whole and is
-indicated in the modeline by (i) or (w) after the object
-type. With inner state, anything that would be considered
+While objed is activated, the object state is either inner or
+whole and is indicated in the modeline by (i) or (w) after the
+object type. With inner state, anything that would be considered
 delimiters or padding around an object is excluded.
 
-While in `objed-mode', the following commands can be used to
-modify the state of a selected object:
+The following commands can be used to modify the state of a
+selected object:
 
-- \\<objed-map>\\[objed-expand-context] `objed-expand-context'
+- \\[objed-expand-context] `objed-expand-context'
 
   Activate the inner part of the object at point and move to the
   start. This is useful to act on the content of the string,
@@ -315,86 +259,68 @@ modify the state of a selected object:
 
 - \\[objed-toggle-side] `objed-toggle-side'
 
-  Move point to the other side of the current object
-"))
-  (let ((fill-column 70))
-    (fill-region (point-min) (point-max)))
-  (goto-char (point-min)))
+  Move point to the other side of the current object"
+   (let ((fill-column 70))
+     (fill-region (point-min) (point-max))))
+  (frame
+   :read-only t
+   :commands (forward-sexp objed-toggle-state)
+   "\n\nSelect the inner part of the expression (emacs-init-time)"
+   (goto-char 42))
+  (frame
+   :read-only t
+   :commands (forward-word objed-toggle-side)
+   "\n\nSelect the word \"hippo\" then move the cursor to the other side."
+   (goto-char 18))
+  (frame
+   :read-only t
+   :commands (forward-sexp objed-toggle-state)
+   "\n\nSelect the inner part of the string in the following expression.
 
-
-(key-game-frame objed-game-level-3-1
-  :read-only t
-  :commands (forward-sexp objed-toggle-state)
-  (insert "\n\nSelect the inner part of the expression (emacs-init-time)")
-  (goto-char 42))
-
-(key-game-frame objed-game-level-3-2
-  :read-only t
-  :commands (forward-word objed-toggle-side)
-  (insert "\n\nSelect the word \"hippo\" then move the cursor to the other side.")
-  (goto-char 18))
-
-(key-game-frame objed-game-level-3-3
-  :read-only t
-  :commands (forward-sexp objed-toggle-state)
-  (insert "\n\nSelect the inner part of the string in the following expression.
-
-  (message \"The current major mode is %s\" major-mode)")
-  (goto-char 79))
-
-(key-game-frame objed-game-level-3-4
-  :read-only t
-  :commands ((or objed-toggle-state objed-expand-context))
-  (insert "\n\nSelect the outer part of the string \"barbecue\".")
-  (goto-char 44)
-  (objed-activate 'string)
-  (objed-toggle-state))
-
-(key-game-frame objed-game-level-3-5
-  :read-only t
-  :commands (next-line objed-toggle-state)
-  (insert "\n\n               \n    Select the inner part of this line.    ")
-  (goto-char 18))
-
-(key-game-frame objed-game-level-3-6
-  :read-only t
-  :commands (objed-toggle-side)
-  (insert "\n\nMove the cursor to the opposite side of the defun.
+  (message \"The current major mode is %s\" major-mode)"
+   (goto-char 79))
+  (frame
+   :read-only t
+   :commands ((or objed-toggle-state objed-expand-context))
+   "\n\nSelect the outer part of the string \"barbecue\"."
+   (goto-char 44)
+   (objed-activate 'string)
+   (objed-toggle-state))
+  (frame
+   :read-only t
+   :commands (next-line objed-toggle-state)
+   "\n\n               \n    Select the inner part of this line.   \n"
+   (goto-char 18))
+  (frame
+   :read-only t
+   :commands (objed-toggle-side)
+   "\n\nMove the cursor to the opposite side of the defun.
 
   (defun my-icomplete-setup ()
-    (setq-local completion-styles '(basic flex))) ")
-  (goto-char 57)
-  (objed-activate 'sexp))
-
-(key-game-frame objed-game-level-3-7
-  :read-only t
-  :commands (objed-expand-context objed-expand-context)
-  (insert "\n\nExpand the context of the selection to include the entire `add-hook'
+    (setq-local completion-styles '(basic flex))) "
+   (goto-char 57)
+   (objed-activate 'sexp))
+  (frame
+   :read-only t
+   :commands (objed-expand-context objed-expand-context)
+   "\n\nExpand the context of the selection to include the entire `add-hook'
 
 (add-hook 'emacs-startup-hook
           (lambda ()
             (message (emacs-init-time \"Emacs loaded in %.2fs\")))
-          100) ")
-  (goto-char 136)
-  (objed-activate 'bracket))
+          100) "
+   (goto-char 136)
+   (objed-activate 'bracket)))
 
-;;;; Level 3:
 
-(key-game-level objed-game-level-4
+(objed-game-level level-4
   "Level 4: Switch types"
-  :intro objed-game-level-4-intro
-  :next objed-game-level-4a
-  objed-game-level-4-1
-  objed-game-level-4-2
-  objed-game-level-4-3
-  objed-game-level-4-4
-  objed-game-level-4-5
-  objed-game-level-4-6)
-
-(key-game-frame objed-game-level-4-intro
-  :read-only t
-  :mode fundamental-mode
-  (insert (substitute-command-keys "\\<objed-mode-map>
+  :next level-4a
+  :random t
+  (intro
+   :read-only t
+   :mode fundamental
+   "\\<objed-map>
 **********************************************************************
 
                        SWITCH OBJECT TYPES
@@ -403,7 +329,7 @@ modify the state of a selected object:
 
 While in `objed-mode', you can use basic movement commands
 without the modifier keys to change the object type and move the
-cursor \\<objed-map>
+cursor.
 
 - \\[objed-right-char]/\\[objed-left-char]
   Move forward/backward one char and activate the char object
@@ -421,77 +347,59 @@ cursor \\<objed-map>
   Move to the next/previous symbol object
 
 - \\[objed-backward-paragraph]/\\[objed-forward-paragraph]
-  Move forward/backward paragraph and switch to paragraph object
-"))
-  (let ((fill-column 70))
-    (fill-region (point-min) (point-max)))
-  (goto-char (point-min)))
+  Move forward/backward paragraph and switch to paragraph object "
+   (let ((fill-column 70))
+     (fill-region (point-min) (point-max))))
+  (frame
+   :read-only t
+   :commands (objed-right-char)
+   "\n\nMove the cursor one character to the right without exiting objed mode."
+   (goto-char 30)
+   (objed-activate 'word))
+  (frame
+   :read-only t
+   :commands (objed-left-char)
+   "\n\nMove the cursor one character to the left without exiting objed mode."
+   (goto-char 30)
+   (objed-activate 'word))
+  (frame
+   :read-only t
+   :commands ((or objed-objed--forward-sexp objed-forward-symbol))
+   "\n\nSelect the symbol `major-mode' without exiting objed mode.
 
-(key-game-frame objed-game-level-4-1
-  :read-only t
-  :commands (objed-right-char)
-  (insert "\n\nMove the cursor one character to the right without exiting objed mode.")
-  (goto-char 30)
-  (objed-activate 'word))
-
-(key-game-frame objed-game-level-4-2
-  :read-only t
-  :commands (objed-left-char)
-  (insert "\n\nMove the cursor one character to the left without exiting objed mode.")
-  (goto-char 30)
-  (objed-activate 'word))
-
-(key-game-frame objed-game-level-4-3
-  :read-only t
-  :commands ((or objed-objed--forward-sexp objed-forward-symbol))
-  (insert "\n\nSelect the symbol `major-mode' without exiting objed mode.
-
-  (message \"The current major mode is %s\" major-mode)")
-  (goto-char 104)
-  (objed-activate 'sexp))
-
-(key-game-frame objed-game-level-4-4
-  :read-only t
-  :commands (objed-objed--backward-sexp)
-  (insert "\n\nSelect the string in the following expression without exiting
+  (message \"The current major mode is %s\" major-mode)"
+   (goto-char 104)
+   (objed-activate 'sexp))
+  (frame
+   :read-only t
+   :commands (objed-objed--backward-sexp)
+   "\n\nSelect the string in the following expression without exiting
 objed mode.
 
-  (message \"The current major mode is %s\" major-mode)")
-  (goto-char 120)
-  (objed-activate 'sexp))
+  (message \"The current major mode is %s\" major-mode)"
+   (goto-char 120)
+   (objed-activate 'sexp))
+  (frame
+   :read-only t
+   :commands (objed-forward-word)
+   "\n\nSelect the following word without exiting objed mode"
+   (goto-char 28)
+   (objed-activate 'line))
+  (frame
+   :read-only t
+   :commands (objed-backward-word)
+   "\n\nSelect the previous word without exiting objed mode"
+   (goto-char 35)
+   (objed-activate 'line)))
 
-(key-game-frame objed-game-level-4-5
-  :read-only t
-  :commands (objed-forward-word)
-  (insert "\n\nSelect the following word without exiting objed mode")
-  (goto-char 28)
-  (objed-activate 'line))
-
-(key-game-frame objed-game-level-4-6
-  :read-only t
-  :commands (objed-backward-word)
-  (insert "\n\nSelect the previous word without exiting objed mode")
-  (goto-char 35)
-  (objed-activate 'line))
-
-;;;; Level 4a:
-
-(key-game-level objed-game-level-4a
+(objed-game-level level-4a
   "Level 4a: Switch types - Avy"
-  :intro objed-game-level-4a-intro
-  :next objed-game-level-5
-  objed-game-level-4a-1
-  objed-game-level-4a-2
-  objed-game-level-4a-3
-  objed-game-level-4a-4
-  objed-game-level-4a-5
-  objed-game-level-4a-6
-  objed-game-level-4a-7)
-
-(key-game-frame objed-game-level-4a-intro
-  :read-only t
-  :mode fundamental-mode
-  (insert (substitute-command-keys (concat "\\<objed-mode-map>
+  :next level-5
+  :random t
+  (intro
+   :read-only t
+   :mode fundamental-mode
+   (insert (substitute-command-keys (concat "
 **********************************************************************
 
                        SWITCH OBJECT TYPES (Avy)
@@ -505,7 +413,7 @@ object types:
 
 \\{objed-object-map}
 
-The prefix keys are as follows
+The prefix keys are as follows.
 
 - " (propertize "o" 'font-lock-face 'help-key-binding) "
 
@@ -532,14 +440,13 @@ The prefix keys are as follows
   visible portion of the buffer, it will restrict `avy' to find
   instances within the currently selected object.
 ")))
-  (let ((fill-column 70))
-    (fill-region 1443 (point-max)))
-  (goto-char (point-min)))
-
-(key-game-frame objed-game-level-4a-1
-  :read-only t
-  :keys ("o m")
-  (insert "\n\nSelect the nearest email object and activate objed.
+   (let ((fill-column 70))
+     (fill-region 1443 (point-max)))
+   (goto-char (point-min)))
+  (frame
+   :read-only t
+   :keys ("o m")
+   "\n\nSelect the nearest email object and activate objed.
 
 not-an-email
 not-an-email
@@ -547,66 +454,56 @@ not-an-email
 test@mail.com
 not-an-email
 not-an-email
-not-an-email")
-  (goto-char (point-min))
-  (objed-activate 'line))
-
-(key-game-frame objed-game-level-4a-2
-  :read-only t
-  :keys ("o s")
-  (insert "\n\nSelect the nearest \"string\" in this sentence.")
-  (goto-char (point-min))
-  (objed-activate 'char))
-
-(key-game-frame objed-game-level-4a-3
-  :read-only t
-  :keys ("o u")
-  (insert "\n\nJump to the nearest url in this buffer.\n\nhttps://google.com")
-  (goto-char (point-min))
-  (objed-activate 'char))
-
-(key-game-frame objed-game-level-4a-4
-  :read-only t
-  :keys ("# w")
-  :condition (= 129 (point))
-  (insert "\n\nJump to the word \"secret\", using avy, in the following sentence:
+not-an-email"
+   (goto-char (point-min))
+   (objed-activate 'line))
+  (frame
+   :read-only t
+   :keys ("o s")
+   "\n\nSelect the nearest \"string\" in this sentence."
+   (objed-activate 'char))
+  (frame
+   :read-only t
+   :keys ("o u")
+   "\n\nJump to the nearest url in this buffer.\n\nhttps://google.com"
+   (objed-activate 'char))
+  (frame
+   :read-only t
+   :keys ("# w")
+   :condition (= 129 (point))
+   "\n\nJump to the word \"secret\", using avy, in the following sentence:
 
 Frank knew there was a correct time and place to reveal his
-secret and this wasn't it.")
-  (goto-char (point-min))
-  (objed-activate 'line))
-
-(key-game-frame objed-game-level-4a-5
-  :read-only t
-  :keys ("# l")
-  :condition (= 342 (point))
-  (insert "\n\nJump to the line containing the word \"pink\", using avy, in
+secret and this wasn't it."
+   (objed-activate 'line))
+  (frame
+   :read-only t
+   :keys ("# l")
+   :condition (= 342 (point))
+   "\n\nJump to the line containing the word \"pink\", using avy, in
  the following paragraph:
 
 They had always called it the green river. It made sense. The
 river was green. The river likely had a different official name,
 but to everyone in town, it was and had always been the green
 river. So it was with great surprise that on this day the green
-river was a fluorescent pink.\n")
-  (goto-char (point-min))
-  (objed-activate 'word))
-
-(key-game-frame objed-game-level-4a-6
-  :read-only t
-  :keys ("= w")
-  :condition (= 117 (point))
-  (insert "\n\nJump to the word \"brick\", using avy, within the currently selected line.
+river was a fluorescent pink.\n"
+   (objed-activate 'word))
+  (frame
+   :read-only t
+   :keys ("= w")
+   :condition (= 117 (point))
+   "\n\nJump to the word \"brick\", using avy, within the currently selected line.
 
 Today is the day I'll finally know what brick tastes like.
-")
-  (goto-char 83)
-  (objed-activate 'line))
-
-(key-game-frame objed-game-level-4a-7
-  :read-only t
-  :keys ("# d")
-  :condition (= 134 (point))
-  (insert "
+"
+   (goto-char 83)
+   (objed-activate 'line))
+  (frame
+   :read-only t
+   :keys ("# d")
+   :condition (= 134 (point))
+   "
 
 Jump to the defun named \"green\" using avy.
 
@@ -630,26 +527,17 @@ Jump to the defun named \"green\" using avy.
   (interactive)
   (set-cursor-color \"orange\"))
 
-")
-  (goto-char (point-min))
-  (objed-activate 'word))
+"
+   (objed-activate 'word)))
 
-;;;; Level 5
-
-(key-game-level objed-game-level-5
+(objed-game-level level-5
   "Level 5: Movement"
-  :intro objed-game-level-5-intro
-  :next objed-game-level-6
-  objed-game-level-5-1
-  objed-game-level-5-2
-  objed-game-level-5-3
-  objed-game-level-5-4
-  objed-game-level-5-5)
-
-(key-game-frame objed-game-level-5-intro
-  :read-only t
-  :mode fundamental-mode
-  (insert (substitute-command-keys (concat "\\<objed-map>
+  :next level-6
+  :random t
+  (intro
+   :read-only t
+   :mode fundamental-mode
+   "\\<objed-map>
 **********************************************************************
 
                        MOVEMENT COMMANDS
@@ -668,16 +556,13 @@ to move the cursor around a buffer.
 
 - \\[objed-last] `objed-last'
   Pop to last state, which restores the last position and any
-  object data.")))
-  (let ((fill-column 70))
-    (fill-region 1443 (point-max)))
-  (goto-char (point-min)))
-
-
-(key-game-frame objed-game-level-5-1
-  :read-only t
-  :commands (objed-bottom-object)
-  (insert "\n\nNavigate to the last email address in the list.
+  object data."
+   (let ((fill-column 70))
+     (fill-region 1443 (point-max))))
+  (frame
+   :read-only t
+   :commands (objed-bottom-object)
+   "\n\nNavigate to the last email address in the list.
 
 not-an-email
 test@test.com
@@ -685,68 +570,62 @@ mail@gmail.com
 not-an-email
 mail@yahoo.com
 test@gmail.com
-not-an-email")
-  (goto-char 80)
-  (objed-activate 'email))
-
-
-(key-game-frame objed-game-level-5-2
-  :read-only t
-  :commands (objed-previous objed-previous)
-  (insert "\n\nNavigate two email addresses up in the list.
+not-an-email"
+   (goto-char 80)
+   (objed-activate 'email))
+  (frame
+   :read-only t
+   :commands (objed-previous objed-previous)
+   "\n\nNavigate two email addresses up in the list.
 
 not-an-email
 test@test.com
 mail@gmail.com
 not-an-email
 mail@yahoo.com
-test@gmail.com")
-  (objed-activate 'email))
-
-(key-game-frame objed-game-level-5-3
-  :read-only t
-  :mode fundamental-mode
-  :keys ("o =" "]")
-  (insert "\n\nSelect the nearest " (propertize "face then move" 'face 'error)
+test@gmail.com"
+   (goto-char (point-max))
+   (objed-activate 'email))
+  (frame
+   :read-only t
+   :mode fundamental-mode
+   :keys ("o =" "]")
+   (insert "\n\nSelect the nearest " (propertize "face then move" 'face 'error)
           " to the next instance of that face.\n\n\n"
           (propertize "Example warning" 'face 'warning)
           "\n\n"
           (propertize "Example error" 'face 'error)
           "\n\n"
           (propertize "Example emphasis" 'face 'bold-italic))
-  (goto-char 24)
-  (objed-activate 'char))
-
-(key-game-frame objed-game-level-5-4
-  :read-only t
-  :commands (next-line objed-last)
-  (insert "\n\nMove forward one line then move back to the last selected object.\n\n")
-  (goto-char 15)
-  (objed-activate 'word))
-
-(key-game-frame objed-game-level-5-5
-  :read-only t
-  :commands (objed-top-object)
-  (insert "\n\nNavigate to the first email address in the list.
+   (goto-char 24)
+   (objed-activate 'char))
+  (frame
+   :read-only t
+   :commands (objed-next-line objed-last)
+   "\n\nMove forward one line then move back to the last selected object.\n\n"
+   (goto-char 15)
+   (objed-activate 'word))
+  (frame
+   :read-only t
+   :commands (objed-top-object)
+   "\n\nNavigate to the first email address in the list.
 
 not-an-email
 test@test.com
 mail@gmail.com
 not-an-email
 mail@yahoo.com
-test@gmail.com")
-  (objed-activate 'email))
+test@gmail.com"
+   (goto-char (point-max))
+   (objed-activate 'email)))
 
-;;;; Level 6:
-
-(key-game-level objed-game-level-6
+(objed-game-level level-6
   "Level 6: Moving objects"
-  :intro objed-game-level-6-intro)
-
-(key-game-frame objed-game-level-6-intro
-  :read-only t
-  :mode fundamental-mode
-  (insert (substitute-command-keys (concat "\\<objed-map>
+  :random t
+  (intro
+   :read-only t
+   :mode fundamental-mode
+   (insert (substitute-command-keys (concat "\\<objed-map>
 **********************************************************************
 
                            MOVING OBJECTS
@@ -791,55 +670,9 @@ lisp programs.
   current object.
 
 ")))
-  (let ((fill-column 70))
-    (fill-region 1443 (point-max)))
-  (goto-char (point-min)))
-
-;;;; Combined:
-
-(key-game-level objed-game-combined
-  "Combined: All levels"
-  objed-game-level-1-1
-  objed-game-level-1-2
-  objed-game-level-1-3
-  objed-game-level-1-4
-  objed-game-level-1-5
-  objed-game-level-1-6
-  objed-game-level-1-7
-
-  objed-game-level-2-1
-  objed-game-level-2-2
-  objed-game-level-2-3
-  objed-game-level-2-4
-  objed-game-level-2-5
-
-  objed-game-level-3-1
-  objed-game-level-3-2
-  objed-game-level-3-3
-  objed-game-level-3-4
-  objed-game-level-3-5
-  objed-game-level-3-6
-  objed-game-level-3-7
-
-  objed-game-level-4-1
-  objed-game-level-4-2
-  objed-game-level-4-3
-  objed-game-level-4-4
-  objed-game-level-4-5
-  objed-game-level-4-6
-
-  objed-game-level-4a-1
-  objed-game-level-4a-2
-  objed-game-level-4a-4
-  objed-game-level-4a-5
-  objed-game-level-4a-6
-  objed-game-level-4a-7
-
-  objed-game-level-5-1
-  objed-game-level-5-2
-  objed-game-level-5-3
-  objed-game-level-5-4
-  objed-game-level-5-5)
+   (let ((fill-column 70))
+     (fill-region 1443 (point-max)))
+   (goto-char (point-min))))
 
 (provide 'objed-game)
 
