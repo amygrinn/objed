@@ -36,7 +36,11 @@
 
 ;;;; key-game-objed
 
-;;;###autoload (autoload 'objed-game "objed-game" "Objed tutorial game.")
+;;;###autoload
+(autoload 'objed-game "objed-game"
+  "Objed tutorial game."
+  t 'macro)
+
 (key-game objed-game
   "Objed tutorial game."
   :title "Objed Tutorial Game"
