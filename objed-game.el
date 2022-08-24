@@ -211,7 +211,7 @@ You can also type \\[objed-quit] or
    (goto-char 48)
    (objed-activate 'char))
   (frame
-   :keys ("<return>")
+   :commands (newline)
    "\n\nCreate a new line at the end of this sentence and exit objed mode.\n"
    (goto-char 69)
    (objed-activate 'line))
