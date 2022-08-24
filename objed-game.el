@@ -446,7 +446,7 @@ The prefix keys are as follows.
   (frame
    :read-only t
    :keys ("o m")
-   "\n\nSelect the nearest email object and activate objed.
+   "\n\nSelect the nearest email object.
 
 not-an-email
 not-an-email
