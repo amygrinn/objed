@@ -3,7 +3,7 @@
 ;; Copyright (C) 2021 Free Software Foundation, Inc.
 
 ;; Author: Tyler Grinn <tylergrinn@gmail.com>
-;; Version: 0.8.4
+;; Version: 0.8.6
 ;; File: objed-game.el
 ;; Keywords: games
 ;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
