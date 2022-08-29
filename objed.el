@@ -975,7 +975,7 @@ To define your own text objects and editing operations see
 ;;;###autoload
 (define-minor-mode objed-local-mode
   "Enable `objed-mode' in current buffer."
-  :variable ((buffer-local-value 'objed-mode (current-buffer)) . (lambda (s) (setq-local objed-mode s)))
+  :variable (objed-mode . (lambda (s) (setq-local objed-mode s)))
   ;; Same mechanism as in electric-{indent,layout,quote}-mode
   (cond
    ((eq objed-mode (default-value 'objed-mode))
