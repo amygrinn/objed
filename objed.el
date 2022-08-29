@@ -2,7 +2,7 @@
 ;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
-;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "25") (cl-lib "1.0") (avy "0.5"))
 ;; Version: 0.8.6
 ;; Keywords: convenience
 ;; URL: https://github.com/clemera/objed
@@ -126,6 +126,7 @@
 (require 'face-remap)
 (require 'subword)
 (require 'hl-line)
+(require 'avy)
 (require 'objed-objects)
 
 ;;;; External variables
@@ -133,8 +134,6 @@
 (defvar which-key-idle-delay)
 (defvar which-key--using-top-level)
 (defvar which-key-replacement-alist)
-(defvar avy-all-windows)
-(defvar avy-action)
 (defvar ivy-sort-function-alist)
 (defvar edit-indirect--overlay)
 (defvar eval-sexp-fu-flash-mode)
@@ -147,9 +146,6 @@
 (declare-function which-key-description-order "ext:which-key")
 (declare-function which-key--create-buffer-and-show "ext:which-key")
 (declare-function which-key--hide-popup "ext:which-key")
-(declare-function avy-process "ext:avy")
-(declare-function avy--style-fn "ext:avy")
-(declare-function avy-goto-char "ext:avy")
 (declare-function edit-indirect-region "ext:edit-indirect")
 (declare-function edit-indirect-commit "ext:edit-indirect")
 (declare-function electric-pair-syntax-info "ext:elec-pair")

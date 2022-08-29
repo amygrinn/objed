@@ -2,7 +2,7 @@
 ;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
-;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "25") (cl-lib "1.0") (avy "0.5"))
 ;; Version: 0.8.6
 ;; Maintainer: Clemens Radermacher <clemera@posteo.net>
 ;; URL: https://github.com/clemera/objed
@@ -32,9 +32,6 @@
 ;; info for byte-comp
 (defvar objed-map)
 (defvar objed-object-map)
-(declare-function avy-process "ext:avy")
-(declare-function avy--style-fn "ext:avy")
-(declare-function avy-goto-char "ext:avy")
 (declare-function stripe-buffer-mode "ext:stripe-buffer")
 
 (declare-function sgml-skip-tag-backward "ext:sgml-mode")

@@ -6,7 +6,7 @@
 ;; Version: 0.8.6
 ;; File: objed-game.el
 ;; Keywords: games
-;; Package-Requires: ((emacs "25") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "25") (cl-lib "1.0") (avy "0.5"))
 ;; URL: https://gitlab.com/tygrdev/key-game-example
 
 ;; This program is free software; you can redistribute it and/or modify

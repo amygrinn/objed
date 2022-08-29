@@ -5,6 +5,9 @@
 (setq byte-compile--use-old-handlers nil)
 
 ;; compile *.el files
-(dolist (file (directory-files-recursively default-directory "^[^.].*\\.el$"))
+(dolist (file (append
+               (directory-files-recursively (expand-file-name "deps" default-directory)
+                                            "^[.].*\\.el$")
+               (directory-files default-directory nil "^[^.].*\\.el$")))
   (unless (byte-compile-file file)
     (kill-emacs 1)))
