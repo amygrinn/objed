@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2021 Free Software Foundation, Inc.
 
-;; Author: Tyler Grinn <tylergrinn@gmail.com>
+;; Author: Amy Grinn <grinn.amy@gmail.com>
 ;; Version: 0.8.6
 ;; File: objed-game.el
 ;; Keywords: games
